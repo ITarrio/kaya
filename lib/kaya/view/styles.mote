@@ -69,4 +69,21 @@
     min-height: 34px;
     font-weight:normal;
   }
+
+  .label-group>.label:first-child {
+  	border-top-right-radius: 0;
+      border-bottom-right-radius: 0;
+      margin-right: 0;
+  }
+
+  .label-group>.label:last-child {
+  	border-top-left-radius: 0;
+      border-bottom-left-radius: 0;
+      margin-left: 0;
+  }
+
+  .label-group>.label:not(:first-child):not(:last-child):not(.dropdown-toggle) {
+    border-radius: 0;
+  }
+
 </style>

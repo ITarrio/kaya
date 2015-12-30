@@ -14,6 +14,31 @@ module Kaya
       end
     end
 
+    def self.labels_summary_for result
+      if result["results_details"]
+        green = []; yellow = []; red= [];
+        ["passed","failed","undefined","unknown","skipped","pending"].each do |status|
+          if result["results_details"][status] && result["results_details"][status].is_a?(Array)
+            case status
+            when "passed"
+              green = green + result["results_details"][status].map{ |a| a="<li>#{a}<\/li>" }
+            when "failed", "undefined", "unknown"
+              red = red + result["results_details"][status].map{ |a| a="<li>#{a}<\/li>" }
+            when "skipped", "pending"
+              yellow = yellow + result["results_details"][status].map{ |a| a="<li>#{a}<\/li>" }
+            end
+          end
+        end
+        if green == 0 && yellow == 0 && red == 0
+          ""
+        else
+          "<span class='label-group'><a class='label label-success' #{access_report?(result)} data-toggle='tooltip' data-html='true' title='#{green.join("")}' >#{green.size}</a><a class='label label-warning' #{access_report?(result)} data-toggle='tooltip' data-html='true' ttitle='#{yellow.join("")}' >#{yellow.size}</a><a class='label label-danger' #{access_report?(result)} data-toggle='tooltip' data-html='true' title='#{red.join("")}' >#{red.size}</a></span>"
+        end
+      else
+        ""
+      end
+    end
+
     def self.only_label_for result
       label_color = color result["status"]
       "<div class='label label-#{label_color}'>#{result['status'].capitalize}</div>"

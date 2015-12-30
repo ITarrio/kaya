@@ -2,7 +2,6 @@ module Kaya
   module Commands
     def self.start nodemon=false
 
-
       $K_LOG.debug "Starting Kaya" if $K_LOG
       begin
 
@@ -51,9 +50,9 @@ or set HEADLESS active value as false if you do not use browser in your tests."
         Kaya::Support::FilesCleanner.delete_console_outputs_files()
         $K_LOG.debug "Old kaya console files cleanned" if $K_LOG
 
-        $K_LOG.debug "Clearing kaya log file" if $K_LOG
-        Kaya::Support::FilesCleanner.clear_kaya_log
-        $K_LOG.debug "Kaya log file cleanned" if $K_LOG
+        #$K_LOG.debug "Clearing kaya log file" if $K_LOG
+        #Kaya::Support::FilesCleanner.clear_kaya_log
+        #$K_LOG.debug "Kaya log file cleanned" if $K_LOG
 
 
         $K_LOG.debug "Clearing sidekiq log file" if $K_LOG
@@ -71,6 +70,7 @@ or set HEADLESS active value as false if you do not use browser in your tests."
         Kaya::Results.reset!
         $K_LOG.debug "Defunct execution reseted" if $K_LOG
         puts "\n* Results: Reseted".green
+
 
         kaya_arg = "-D" unless nodemon
 
@@ -94,6 +94,7 @@ or set HEADLESS active value as false if you do not use browser in your tests."
             puts "\n\n You can go now to http://#{$IP_ADDRESS}:#{Kaya::Support::Configuration.port}/kaya\n\n"
             $K_LOG.debug "You can go now to http://#{$IP_ADDRESS}:#{Kaya::Support::Configuration.port}/kaya" if $K_LOG
         end
+
 
       rescue => e
         $K_LOG.error "Error starting Kaya: #{e}#{e.backtrace}" if $K_LOG

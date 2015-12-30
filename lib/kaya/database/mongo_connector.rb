@@ -217,13 +217,25 @@ module Kaya
         self.running "test"
       end
 
+      #testing
+
+      #def self.running type
+      #  @@tasks.find({"status" => "RUNNING", "type" => type}).to_a
+      #end
+
+      # def self.running_for_task task_name
+      #   @@tasks.find({"name" => task_name, "status" => "RUNNING"}).to_a
+      # end
+
       def self.running type
-        @@tasks.find({"status" => "RUNNING", "type" => type}).to_a
+        @@tasks.find({"running_execs" => {:$exists => true, :$not => {:$size => 0}}}).to_a
       end
 
       def self.running_for_task task_name
-        @@tasks.find({"name" => task_name, "status" => "RUNNING"}).to_a
+        res = @@tasks.find_one({"name" => task_name})
+        res["running_execs"].to_a if res
       end
+      #-
 
       def self.active_tasks
         self.all_tasks
@@ -303,6 +315,7 @@ module Kaya
       def self.insert_result(result_data)
         begin
           @@results.insert(result_data)
+          $K_LOG.debug "Result Inserted" if $K_LOG
           true
         rescue
           false
@@ -324,6 +337,17 @@ module Kaya
           false
         end
       end
+      #testing
+      def self.update_result_for_given_data result_data_structure
+        begin
+          @@results.update( {"_id" => result_data_structure["_id"]}, { :$set => result_data_structure.keep_if{|key,value| key != "_id"}})
+          true
+        rescue Exception => e
+          $K_LOG.debug "ERROR: #{e}" if $K_LOG
+          false
+        end
+      end
+      #---
 
       def self.result_data_for_id(result_id)
         @@results.find_one({"_id" => ensure_int(result_id)})

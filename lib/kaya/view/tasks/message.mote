@@ -2,7 +2,7 @@
   title = "<p>Oops!</p><p> What are you looking for?</p>"
   alert = "danger"
   buttons = "<a href='/#{Kaya::Support::Configuration.hostname}/kaya/tasks' class='btn btn-info' >Go to Tasks</a>"
-
+  script = ""
   result_id = args[:result_id]
   result = Kaya::Results::Result.get(result_id)
 
@@ -12,7 +12,7 @@
 
     if result.has_started_message?
       title = result.get_started_message!
-
+      script = "<script type=\"text/javascript\"> if(localStorage.getItem(\"subs\")){ localStorage.setItem(\"subs\",localStorage.getItem(\"subs\")+\",#{result_id}\")\; }else{localStorage.setItem(\"subs\",\"#{result_id}\")\;}</script>"
       alert = "success"
       buttons = "
         <a href='/#{Kaya::Support::Configuration.hostname}/kaya/#{type.downcase}s/#{task_name}' class='btn btn-info' >Go to '#{task_name}'</a>
@@ -22,7 +22,7 @@
 
   end
 ?>
-
+{{script}}
 <div class="alert alert-{{alert}}" role="alert">
 
   <H3>

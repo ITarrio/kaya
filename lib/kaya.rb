@@ -107,6 +107,7 @@ require_rel 'generators'
 # require_relative "kaya/execution"
 # require_relative "kaya/cuba"
 
+
 module Kaya
 
 
@@ -116,7 +117,7 @@ module Kaya
     File.open("#{Dir.pwd}/kaya/logs/kaya.log","a+"){} unless File.exist? "#{Dir.pwd}/kaya/logs/kaya.log"
 
     # Set global conf
-    $K_LOG ||= Logger.new("#{Dir.pwd}/kaya/logs/kaya.log",1,1024*1024)
+    $K_LOG ||= Logger.new("#{Dir.pwd}/kaya/logs/kaya.log",10,1024*1024)
     Kaya::Support::Configuration.get
     $NOTIF ||= Support::Notification.new("#{Dir.pwd.split("/").last}", "#{Kaya::Support::IfConfig.ip}:#{Kaya::Support::Configuration.port}")
 

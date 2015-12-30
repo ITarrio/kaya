@@ -33,6 +33,29 @@ module Kaya
         end
       end
 
+      #testing
+      def self.add_result_details name, status
+        self.ensure_db_connection
+        if self.is_there_result?
+          result = self.get_result
+          if result
+            result.add_results_details status, name if name && status
+          end
+        end
+      end
+
+      #testing
+      def self.add_html_report report
+        self.ensure_db_connection
+        if self.is_there_result?
+          result = self.get_result
+          if result
+            result.html_report = report
+            result.save_data!({"_id" => result.id, "html_report"=> report})
+          end
+        end
+      end
+
       def self.get_result
         Kaya::Results::Result.get(self.id)
       end

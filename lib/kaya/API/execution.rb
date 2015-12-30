@@ -31,8 +31,10 @@ module Kaya
 
           type = task.type
 
-          if Kaya::Tasks.number_of_running_executions_for_task(task_name) < task.max_execs
+          #testing MAGIC
 
+          if Kaya::Tasks.number_of_running_executions_for_task(task_name) < task.max_execs
+            message = "#{task.type.capitalize} #{task.name} started"
             $K_LOG.debug "#{task.type.capitalize} #{task_name} is ready to run" if $K_LOG
 
             execution_request_data = {
@@ -41,32 +43,22 @@ module Kaya
               "execution_name"  => execution_name,
               "custom_params"   => custom_params,
               "git_log"         => git_log,
-              "started_message" => "#{task.type.capitalize} #{task.name} started"
+              "started_message" => message
             }
 
             execution_id = Kaya::Execution.run!(execution_request_data)
-
             task.push_exec execution_id
-
             task.set_running!
-
             task.save!
-
             $K_LOG.debug "Task #{task_name} setted as running" if $K_LOG
-
             started = true
-            message = "#{task.type.capitalize} #{task.name} started"
             status = 200
             $K_LOG.debug "#{task.type.capitalize} #{task.name} started" if $K_LOG
-
           else
-
             execution_id = nil
             started = false
             status = 423
-            message = "Max number of concurrent execution reached.
-            Cannot run more than #{task.max_execs} executions simultaneously.
-            Please wait until one is finalized"
+            message = "Max number of concurrent execution reached. Cannot run more than #{task.max_execs} executions simultaneously. Please wait until one is finalized"
             $K_LOG.error "Cannot run more than #{task.max_execs} executions simultaneously" if $K_LOG
           end
 

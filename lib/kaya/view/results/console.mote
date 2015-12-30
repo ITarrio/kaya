@@ -82,6 +82,10 @@ javascript = Mote.parse(File.read("#{Kaya::View.path}/javascript.mote"), self, [
                 Stop execution
               </a>
             % end
+            % if result.html_report && !result.html_report.empty?
+              <a href='#' class='label label-primary' onclick="window.open('/{{Kaya::Support::Configuration.hostname}}/kaya/results/report/{{result.id}}', '_blank', 'toolbar=no, scrollbars=yes, resizable=yes, top=300, left=300, width=800, height=600');" class='btn btn-default'>
+                Report</a>
+            % end
             </div>
           </h6>
         </div>
@@ -114,6 +118,3 @@ javascript = Mote.parse(File.read("#{Kaya::View.path}/javascript.mote"), self, [
     % end
   </body>
 </html>
-
-
-

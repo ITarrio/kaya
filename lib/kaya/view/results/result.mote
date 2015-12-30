@@ -17,7 +17,11 @@
       </a>
     </th>
     <th>
-      {{Kaya::View.label_color_for(result)}}
+      % if result["status"] == "finished"
+        {{Kaya::View.label_color_for(result)}} {{Kaya::View.labels_summary_for(result)}}
+      % else
+        {{Kaya::View.label_color_for(result)}}
+      % end
     </th>
   </tr>
 </div>

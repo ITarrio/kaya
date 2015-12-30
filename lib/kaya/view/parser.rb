@@ -74,6 +74,31 @@ module Kaya
         source.scan(/\d+\sscenario.*\)/).first.gsub(/\<.+\>/,' - ')
       end
 
+      #testing
+      #Given a summary text parse it to a hash structure
+      def self.get_result_details(source)
+        data = {
+          "duration" => 0,
+          "passed" => [],
+          "failed" => [],
+          "undefined" => [],
+          "unknown" => [],
+          "skipped" => [],
+          "pending" => []
+        }
+        source.scan(/<h3(.+)<\/h3>/).each_with_index do |h3, index|
+          $K_LOG.debug "COUNTING scenario_#{index+1} #{source.count("scenario_#{index+1}")}" if $K_LOG
+          data_key = if source.count("scenario_#{index+1}") == 2
+            "passed"
+          else
+            "failed"
+          end
+          data[data_key] << h3.first.split("class=\"val\">").last[0..-8]
+        end
+        data
+      end
+      #-
+
     end
   end
 end

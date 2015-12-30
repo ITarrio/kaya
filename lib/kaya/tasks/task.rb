@@ -44,9 +44,9 @@ module Kaya
           @command          = task_data["command"]
           @custom_params    = task_data["custom_params"] || []
           @information      = task_data["information"]
-          @running_execs    = []
-          @cucumber         = task_data["cucumber_report"]
-          @cucumber_report  = task_data["cucumber"]
+          @running_execs    = task_data["running_execs"] || [] #testing
+          @cucumber         = task_data["cucumber"] #testing
+          @cucumber_report  = task_data["cucumber_report"]
           @max_execs        = task_data["max_execs"] || Kaya::Support::Configuration.maximum_execs_per_task
 
         else
@@ -250,10 +250,18 @@ module Kaya
         self.save!
       end
 
+      #testing
       def delete_exec result_id
         @running_execs.delete result_id
         self.save!
       end
+
+      def empty_execs!
+        @running_execs = []
+        $K_LOG.debug "[#{@id}:#{@name}] Running executions emptied" if $K_LOG
+        self.save!
+      end
+      #-
 
       def number_of_results
         all_results.size

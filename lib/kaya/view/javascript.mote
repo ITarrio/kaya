@@ -140,5 +140,68 @@
      win.onload = win.print;
   }
 
+  $(document).ready(function(){
+    $('[data-toggle="tooltip"]').tooltip();
+    //testing
+    refreshForNotifications(10000);
+  });
+
+  //testing
+
+  document.addEventListener('DOMContentLoaded', function () {
+    if (Notification.permission !== "granted")
+      Notification.requestPermission();
+  });
+
+  function refreshForNotifications(interval){
+     setInterval(function(){
+       allsubs = localStorage.getItem("subs");
+       if (allsubs) {
+         subs = allsubs.split(",");
+         newsubs = [];
+         $(subs).each(function(index){
+           id = $(this).toArray().join("");
+           link =  window.location.origin + '/{{Kaya::Support::Configuration.hostname}}/kaya/api/results/'+id+'/status';
+           $.getJSON(link, function(data, status){
+            if (data["status"] && sendStatusNotification(id, data["status"])){
+              array = localStorage.getItem("subs").split(",");
+              i = array.indexOf(id);
+              if (index > -1) {
+                array.splice(i,1);
+                if (array.length > 0){
+                  localStorage.setItem("subs", array.join());
+                }else{
+                  localStorage.removeItem("subs");
+                }
+              }
+            }
+           });
+         });
+       }
+     }, interval);
+  }
+
+
+  function sendStatusNotification(result_id, status){
+    if (status == "finished" || status == "stopped") {
+      if (Notification) {
+        if (Notification.permission !== "granted")
+          Notification.requestPermission();
+        else {
+          var notification = new Notification('Kaya: Result is ready', {
+            //icon: 'http://cdn.sstatic.net/stackexchange/img/logos/so/so-icon.png',
+            body: "Click here to see the report "+result_id,
+          });
+          link =  window.location.origin + '/{{Kaya::Support::Configuration.hostname}}/kaya/results/report/'+result_id;
+          notification.onclick = function () {
+            window.open(link);
+          };
+        }
+      }
+      return true
+    }
+    return false
+  }
+
 
 </script>

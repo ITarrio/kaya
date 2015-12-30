@@ -1,6 +1,5 @@
 
 % type = "tasks"
-{{args}}
 % tasks_list = Kaya::API::Tasks.list({})
 % $K_LOG.debug "Results for task name #{args[:task_name]}" if $K_LOG and args[:task_name]
 % type = args[:type] || "all"

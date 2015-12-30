@@ -6,13 +6,17 @@ Kaya::Support::Configuration.get
 
 Kaya::Database::MongoConnector.new Kaya::Support::Configuration.db_connection_data
 
+Cuba.use Rack::Static,
+  urls: ["/js", "/css", "/img",],
+  root: "public"
+
 Cuba.define do
 
   $tasks_counter = 0
 
   request = Kaya::Support::Request.new(req)
 
-  $K_LOG.debug "REQUEST '#{request.request}" if $K_LOG
+  #$K_LOG.debug "REQUEST '#{request.request}" if $K_LOG
 
   begin
 
@@ -178,8 +182,30 @@ Cuba.define do
         res.write template.call(result_id:result_id)
       end
 
+      #testing
+      on "#{APP_NAME}/kaya/results/log/:result_id" do |result_id|
+        # result = Kaya::Results::Result.get(result_id)
+        # res.redirect "/#{APP_NAME}/kaya/404/There%20is%20no%20result%20for%20id=#{result_id}" if result.nil?
+        # result.mark_as_saw! if (result.finished? or result.stopped?)
+        template = Mote.parse(File.read("#{Kaya::View.path}/results/console.mote"),self, [:result_id])
+        res.write template.call(result_id:result_id)
+      end
+
 
       # INVERTIR /log con  /:result_id
+      on "#{APP_NAME}/kaya/results/report/:result_id" do |result_id|
+        result = Kaya::Results::Result.get(result_id)
+        res.redirect "/#{APP_NAME}/kaya/404/There%20is%20no%20result%20for%20id=#{result_id}" if result.nil?
+        result.mark_as_saw! if (result.finished? or result.stopped?)
+        if result.finished? and !result.stopped? and result.html_report.size > 0
+          template = Mote.parse(File.read("#{Kaya::View.path}/results/report.mote"),self, [:result])
+          res.write template.call(result:result)
+        else
+          res.redirect "#{APP_NAME}/kaya/results/#{result_id}/log"
+        end
+      end
+
+      #testing
       on "#{APP_NAME}/kaya/results/report/:result_id" do |result_id|
         result = Kaya::Results::Result.get(result_id)
         res.redirect "/#{APP_NAME}/kaya/404/There%20is%20no%20result%20for%20id=#{result_id}" if result.nil?
@@ -313,7 +339,7 @@ Cuba.define do
         path = if result["execution_id"]
          "/#{APP_NAME}/kaya/message/task/#{result['execution_id']}"
         else
-          "/#{APP_NAME}/kaya/error?msg=#{result['message']}"
+          "/#{APP_NAME}/kaya/error?msg=#{result['message'].gsub(" ","%20").gsub("\n","")}"
         end
         res.redirect path
       end
@@ -354,9 +380,10 @@ Cuba.define do
         result = Kaya::API::Execution.start task_name, query_string.values, "test"
         $K_LOG.debug "result => #{result}"
         path = if result["execution_id"]
+          $K_LOG.debug "To result"
          "/#{APP_NAME}/kaya/message/test/#{result['execution_id']}"
         else
-          "/#{APP_NAME}/kaya/error?msg=#{result['message']}"
+          "/#{APP_NAME}/kaya/error?msg=#{result['message'].gsub(" ","%20").gsub("\n","")}"
         end
         res.redirect path
       end
@@ -454,6 +481,13 @@ Cuba.define do
         query_string = Kaya::Support::QueryString.new req
         output = Kaya::API::Result.data(result_id, query_string.raw)
         res.write output.to_json
+      end
+
+      #testing
+      on "#{APP_NAME}/kaya/api/results/:id/execution_data/:key" do |result_id, key|
+        query_string = Kaya::Support::QueryString.new req
+        output = Kaya::API::Result.data(result_id, query_string.raw)
+        res.write output["execution_data"][key]
       end
 
       on "#{APP_NAME}/kaya/api/results/:id/status" do |result_id|
@@ -584,6 +618,41 @@ Cuba.define do
       end
 
 # ========================================================================
+# HARDCODE PARA HOME-AUTOMATION
+#
+# testing
+#      on "#{APP_NAME}/kaya/back/js/funciones.js" do
+#        res.headers["Content-Type"] = "application/javascript; charset=utf-8"
+#        res.write File.read("#{Kaya::View.path}/home-automation/js/funciones.js")
+#      end
+#
+#      on "#{APP_NAME}/kaya/back/js/jquery.rule.js" do
+#        res.headers["Content-Type"] = "application/javascript; charset=utf-8"
+#        res.write File.read("#{Kaya::View.path}/home-automation/js/jquery.rule.js")
+#      end
+#
+#      on "#{APP_NAME}/kaya/back/js/bootstrap.min.js" do
+#        res.headers["Content-Type"] = "application/javascript; charset=utf-8"
+#        res.write File.read("#{Kaya::View.path}/home-automation/js/bootstrap.min.js")
+#      end
+#
+#      on "#{APP_NAME}/kaya/back/css/report.css" do
+#        res.headers["Content-Type"] = "text/css; charset=utf-8"
+#        res.write File.read("#{Kaya::View.path}/home-automation/css/report.css")
+#      end
+#
+#      on "#{APP_NAME}/kaya/back/css/bootstrap.min.css" do
+#        res.headers["Content-Type"] = "text/css; charset=utf-8"
+#        res.write File.read("#{Kaya::View.path}/home-automation/css/bootstrap.min.css")
+#      end
+
+      on "/back" do
+        res.write File.read("public/report.html")
+      end
+
+
+
+# ========================================================================
 # REDIRECTS
 #
       on "#{APP_NAME}/kaya/help" do
@@ -618,7 +687,10 @@ Cuba.define do
       on root do
         res.write "Check the url"
       end
+
     end
+
+
 
 
 

@@ -154,7 +154,10 @@ module Kaya
 
       def add_execution_data key, value
         @execution_data.store(key, value)
-        self.save!
+        #testing
+        #self.save!
+        $K_LOG.debug "Execution Data Added" if $K_LOG
+        self.save_data!({"_id" => id, "execution_data" => execution_data})
       end
 
       # @param [Hash] details
@@ -203,15 +206,48 @@ module Kaya
       def finish!
         @finished_at= now_in_seconds
         @status = @summary = "finished"
-        save_report
-        self.save!
+        report_is_saved = save_report
+        get_summary!
+        #testing
+        #self.save!
+        if report_is_saved
+          self.save_data!({"_id" => id, "finished_at" => finished_at, "status" => status, "summary" => summary, "html_report"=> html_report})
+        else
+          self.save_data!({"_id" => id, "finished_at" => finished_at, "status" => status, "summary" => summary})
+        end
+        #-
         delete_asociated_files!
-        $K_LOG.debug "[#{@id}] Executuion finished" if $K_LOG
+        #testing
+        task_update
+        #-
+        $K_LOG.debug "[#{@id}] Execution finished" if $K_LOG
         true
       end
 
-      def finished_by_timeout!
+      #testing
+      def task_update #Delete the execution id from the task
+        Kaya::Tasks::Task.get(task_id).delete_exec(@id)
+      end
 
+      def update!
+        data = Kaya::Database::MongoConnector.result_data_for_id(@id)
+        if data
+          data.each_pair do |var, value|
+            begin
+              send("#{var}=",value)
+            rescue; end
+          end
+        end
+      end
+
+      def add_results_details key, value
+        results_details[key] << value
+        $K_LOG.debug "[#{@id}] Adding result detail (#{key})" if $K_LOG
+        self.save_data!({"_id" => id, "results_details" => results_details})
+      end
+      #-
+
+      def finished_by_timeout!
         @timeout = "#{Kaya::Support::Configuration.execution_time_to_live}"
         reset!("Timeout reached '#{@timeout}'")
         # save_report
@@ -305,8 +341,9 @@ module Kaya
           else
             @html_report
           end
-          @summary = Kaya::View::Parser.extract_summary(report) unless summary?
-          self.save!
+          @summary = Kaya::View::Parser.extract_summary(report) #unless summary? #testing
+          #testing
+          #self.save!
         else
 
         end
@@ -439,8 +476,12 @@ module Kaya
       def append_output output
         @console_output += output
         mark_last_check_time
-        self.save!
+        #testing#Basicamente eso lo hice porque en executor que llama a esta funcion todo el tiempo, el objeto result en esa funcion, no esta recargando la informacion que pasa desde afuera(por ejemplo en el test se agrega execution data y esto provocaba que despues de que se cargue en mongo la data, el estado en esta funcion era vacio y la sobrescribia)
+        #self.save!
+        self.save_data!({"_id" => id, "console_output" => console_output, "last_check_time" => last_check_time})
+        #-
       end
+
 
       def is_running?
         @status =~ /running|stated/i
@@ -480,7 +521,11 @@ module Kaya
         @finished_at= now_in_seconds
         save_report
         delete_asociated_files!
-        self.save!
+        #testing
+        #self.save!
+        self.save_data!({"_id" => id, "finished_at" => finished_at, "status" => status, "summary" => summary, "html_report"=> html_report})
+        task_update
+        #-
         $K_LOG.debug "[#{@id}] Execution stoppped (reset)" if $K_LOG
       end
 
@@ -579,6 +624,14 @@ module Kaya
         $K_LOG.debug "[#{@id}] Result saved" if $K_LOG
       end
 
+      #testing
+      #Persists the status of the object on mongo.
+      #If result existes updates only the new data, else creates it, with the complete data
+      def save_data! data
+        Kaya::Database::MongoConnector.result_data_for_id(id) ? Kaya::Database::MongoConnector.update_result_for_given_data(data) : Kaya::Database::MongoConnector.insert_result(result_data_structure)
+        $K_LOG.debug "[#{@id}] Data Result saved" if $K_LOG
+      end
+      #-
     end
   end
 end

@@ -145,6 +145,7 @@ module Kaya
       $K_LOG.debug "Resetting tasks status" if $K_LOG
       self.running_tasks.each do |task|
         Kaya::Tasks::Task.get(task["_id"]).set_ready!
+        Kaya::Tasks::Task.get(task["_id"]).empty_execs!
       end
     end
 
